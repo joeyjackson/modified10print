@@ -1,27 +1,23 @@
 import "./style/style.scss";
 import P5 from "p5";
+// import _externalConfig from "./config.json";
+const _externalConfig = undefined;
 
 const RESET_INTERVAL_DURATION_MS = 15000;
 
-const randomBoolGrid = (rows: number, columns: number, bias: number = 0.5) => {
-  const grid: boolean[][] = [];
-  for (let r = 0; r < rows; r++) {
-    const currentRow: boolean[] = [];
-    for (let c = 0; c < columns; c++) {
-      currentRow.push(Math.random() > bias);
-    }
-    grid.push(currentRow);
-  }
-  return grid;
-}
-
-const coinFlip = () => {
-  return Math.random() > 0.5;
-}
-
 const enum MODE {
-  TEN_PRINT,
-  SQUARE_PRINT,
+  TEN_PRINT = 0,
+  SQUARE_PRINT = 1,
+}
+
+interface config_t {
+  seed: number;
+  bias: number;
+  scale: number;
+  height: number;
+  width: number;
+  mode: MODE;
+  grid: boolean[][];
 }
 
 const sketch = (p5: P5) => {
@@ -31,6 +27,18 @@ const sketch = (p5: P5) => {
   let mode: MODE = MODE.TEN_PRINT;
 
   let grid: boolean[][];
+
+  const generateBoolGrid = (p5: P5, rows: number, columns: number, bias: number = 0.5) => {
+    const grid: boolean[][] = [];
+    for (let r = 0; r < rows; r++) {
+      const currentRow: boolean[] = [];
+      for (let c = 0; c < columns; c++) {
+        currentRow.push(p5.random() > bias);
+      }
+      grid.push(currentRow);
+    }
+    return grid;
+  }
   
   const tenPrintGrid = (grid: boolean[][]) => {
     grid.forEach((cells, r) => {
@@ -56,19 +64,44 @@ const sketch = (p5: P5) => {
     });
   }
 
-  const resetGrid = () => {
-    scale = Math.round(p5.map(Math.random(), 0, 1, 4, 16));
-    mode = coinFlip() ? MODE.TEN_PRINT : MODE.SQUARE_PRINT;
-    const bias = Math.random();
-    grid = randomBoolGrid(p5.height / scale, p5.width / scale, bias);
+  const resetGrid = (config?: config_t, shouldLog: boolean = true) => {
+    const now = Date.now();
+
+    const seed = config?.seed ?? now;
+    p5.randomSeed(seed);
+
+    scale = config?.scale ?? (Math.round(p5.map(p5.random(), 0, 1, 4, 16)));
+    mode = config?.mode ?? ((p5.random() > 0.5) ? MODE.TEN_PRINT : MODE.SQUARE_PRINT);
+    const bias = config?.bias ?? p5.random();
+    const w = config?.width ?? p5.width;
+    const h = config?.height ?? p5.height;
+    grid = config?.grid ?? generateBoolGrid(
+      p5, 
+      h / scale, 
+      w / scale, 
+      bias
+    );
+
+    const _currConfig = {
+      seed: seed,
+      bias: bias,
+      scale: scale,
+      height: h,
+      width: w,
+      mode: mode,
+      grid: grid,
+    }
+    if (shouldLog) {
+      console.log("Config", now, JSON.stringify(_currConfig));
+    }
   }
 
   p5.setup = () => {
     p5.createCanvas(WIDTH, HEIGHT);
     p5.stroke(0);
 
-    resetGrid();
-    setInterval(resetGrid, RESET_INTERVAL_DURATION_MS);
+    resetGrid(_externalConfig, _externalConfig === undefined);
+    setInterval(() => resetGrid(_externalConfig, _externalConfig === undefined), RESET_INTERVAL_DURATION_MS);
   }
 
   p5.draw = () => {

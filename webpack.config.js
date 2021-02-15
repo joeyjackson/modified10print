@@ -12,18 +12,16 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.scss?$/,
+        test: /\.scss?$/i,
         use: [
           "style-loader",
           "css-loader",
-          "sass-loader"
+          "sass-loader",
         ]
       },
       {
-        test: /\.ts?$/,
-        use: [
-          "ts-loader"
-        ],
+        test: /\.ts?$/i,
+        loader: "ts-loader",
         exclude: /node_modules/
       },
     ],
@@ -34,6 +32,7 @@ module.exports = {
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
     hot: true,
+    port: 9000,
   },
   plugins: [
     new HtmlWebpackPlugin({

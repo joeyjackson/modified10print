@@ -25,6 +25,8 @@ const sketch = (p5: P5) => {
   const HEIGHT = 500;
   let scale = 10;
   let mode: MODE = MODE.TEN_PRINT;
+  let isPaused = false;
+  let interval: NodeJS.Timeout | null = null;
 
   let grid: boolean[][];
 
@@ -92,7 +94,7 @@ const sketch = (p5: P5) => {
       grid: grid,
     }
     if (shouldLog) {
-      console.log("Config", now, JSON.stringify(_currConfig));
+      console.log("Config", new Date(now).toISOString(), JSON.stringify(_currConfig));
     }
   }
 
@@ -101,7 +103,7 @@ const sketch = (p5: P5) => {
     p5.stroke(0);
 
     resetGrid(_externalConfig, _externalConfig === undefined);
-    setInterval(() => resetGrid(_externalConfig, _externalConfig === undefined), RESET_INTERVAL_DURATION_MS);
+    interval = setInterval(() => resetGrid(_externalConfig, _externalConfig === undefined), RESET_INTERVAL_DURATION_MS);
   }
 
   p5.draw = () => {
@@ -113,6 +115,34 @@ const sketch = (p5: P5) => {
       case MODE.SQUARE_PRINT:
         squarePrintGrid(grid);
         break;
+    }
+
+    if (isPaused) {
+      p5.push();
+      p5.noFill();
+      p5.stroke(85, 145, 242);
+      p5.strokeWeight(3);
+      p5.rect(0, 0, p5.width, p5.height);
+      p5.pop();
+    }
+  }
+
+  p5.mousePressed = () => {
+    if (p5.mouseX > 0 && p5.mouseX < p5.width && p5.mouseY > 0 && p5.mouseY < p5.height) {
+      if (isPaused) {
+        isPaused = false;
+        if (interval !== null) {
+          clearInterval(interval);
+          interval = null;
+        }
+        interval = setInterval(() => resetGrid(_externalConfig, _externalConfig === undefined), RESET_INTERVAL_DURATION_MS);
+      } else {
+        isPaused = true;
+        if (interval !== null) {
+          clearInterval(interval);
+          interval = null;
+        }
+      }
     }
   }
 }

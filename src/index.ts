@@ -1,5 +1,5 @@
 import "./style/style.scss";
-import P5 from "P5";
+import P5 from "p5";
 
 const RESET_INTERVAL_DURATION_MS = 15000;
 

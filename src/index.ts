@@ -1,8 +1,9 @@
 import "./style/style.scss";
 import P5 from "p5";
 // import _externalConfig from "./config.json";
-const _externalConfig = undefined;
+const _externalConfig = null;
 
+const BORDER_WIDTH = 60;
 const RESET_INTERVAL_DURATION_MS = 15000;
 
 const enum MODE {
@@ -21,12 +22,12 @@ interface config_t {
 }
 
 const sketch = (p5: P5) => {
-  const WIDTH = 800;
-  const HEIGHT = 500;
+  const WIDTH = window.innerWidth - (BORDER_WIDTH * 2);
+  const HEIGHT = window.innerHeight - (BORDER_WIDTH * 2);
   let scale = 10;
   let mode: MODE = MODE.TEN_PRINT;
   let isPaused = false;
-  let interval: NodeJS.Timeout | null = null;
+  let interval: number | null = null;
 
   let grid: boolean[][];
 
@@ -66,7 +67,10 @@ const sketch = (p5: P5) => {
     });
   }
 
-  const resetGrid = (config?: config_t, shouldLog: boolean = true) => {
+  const resetGrid = (
+    config: config_t | null = _externalConfig, 
+    shouldLog: boolean = _externalConfig === null
+  ) => {
     const now = Date.now();
 
     const seed = config?.seed ?? now;
@@ -99,11 +103,12 @@ const sketch = (p5: P5) => {
   }
 
   p5.setup = () => {
-    p5.createCanvas(WIDTH, HEIGHT);
+    const canvas = p5.createCanvas(WIDTH, HEIGHT);
+    canvas.center("horizontal");
     p5.stroke(0);
 
-    resetGrid(_externalConfig, _externalConfig === undefined);
-    interval = setInterval(() => resetGrid(_externalConfig, _externalConfig === undefined), RESET_INTERVAL_DURATION_MS);
+    resetGrid();
+    interval = setInterval(resetGrid, RESET_INTERVAL_DURATION_MS);
   }
 
   p5.draw = () => {
@@ -135,7 +140,7 @@ const sketch = (p5: P5) => {
           clearInterval(interval);
           interval = null;
         }
-        interval = setInterval(() => resetGrid(_externalConfig, _externalConfig === undefined), RESET_INTERVAL_DURATION_MS);
+        interval = setInterval(resetGrid, RESET_INTERVAL_DURATION_MS);
       } else {
         isPaused = true;
         if (interval !== null) {
@@ -144,6 +149,11 @@ const sketch = (p5: P5) => {
         }
       }
     }
+  }
+
+  p5.windowResized = () => {
+    p5.resizeCanvas(window.innerWidth - (BORDER_WIDTH * 2), window.innerHeight - (BORDER_WIDTH * 2));
+    resetGrid();
   }
 }
 

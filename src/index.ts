@@ -27,7 +27,7 @@ const sketch = (p5: P5) => {
   let scale = 10;
   let mode: MODE = MODE.TEN_PRINT;
   let isPaused = false;
-  let interval: number | null = null;
+  let interval: any | null = null;
 
   let grid: boolean[][];
 
